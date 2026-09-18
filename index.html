@@ -1,23 +1,40 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Manajemen Populasi Unit (Cloud Google Sheets)</title>
+    <title>Sistem Manajemen Populasi Unit (Google Sheets)</title>
     <!-- Tailwind CSS untuk Desain Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS untuk Fitur Excel Upload & Download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- FontAwesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Custom Notification Box (Pengganti alert()) -->
+    <div id="notificationModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-slate-100 text-center transform transition-all">
+            <div id="notifIconWrapper" class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mx-auto mb-3">
+                <i id="notifIcon" class="fa-solid fa-info"></i>
+            </div>
+            <h4 id="notifTitle" class="text-base font-bold text-slate-800 mb-1">Informasi Sistem</h4>
+            <p id="notifMessage" class="text-sm text-slate-600 mb-6">Pesan sistem...</p>
+            <button onclick="closeNotification()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-xl text-sm transition shadow-sm">Mengerti</button>
+        </div>
+    </div>
 
     <!-- Header / Navbar -->
     <header class="bg-blue-600 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
-                <div class="bg-white text-blue-600 p-2.5 rounded-lg shadow">
+                <div class="bg-white text-blue-600 p-2.5 rounded-xl shadow">
                     <i class="fa-solid fa-truck-monster text-xl"></i>
                 </div>
                 <div>
@@ -27,11 +44,11 @@
             </div>
             
             <!-- Indikator Status & Tombol Aksi Cepat -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap justify-center">
                 <span id="sync-status" class="bg-blue-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Terhubung ke Cloud
                 </span>
-                <button onclick="fetchDataFromCloud()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 font-medium">
+                <button onclick="fetchDataFromCloud()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 font-medium shadow-sm">
                     <i class="fa-solid fa-rotate"></i> Muat Ulang
                 </button>
             </div>
@@ -39,7 +56,7 @@
     </header>
 
     <!-- Konten Utama -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
 
         <!-- Kartu Statistik -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -48,21 +65,21 @@
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Unit</p>
                     <h3 id="stat-total" class="text-2xl font-bold text-slate-700 mt-1">0</h3>
                 </div>
-                <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-cubes text-lg"></i></div>
+                <div class="bg-blue-50 text-blue-600 p-3 rounded-xl"><i class="fa-solid fa-cubes text-lg"></i></div>
             </div>
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ready / Beroperasi</p>
                     <h3 id="stat-ready" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
                 </div>
-                <div class="bg-emerald-50 text-emerald-600 p-3 rounded-lg"><i class="fa-solid fa-circle-check text-lg"></i></div>
+                <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl"><i class="fa-solid fa-circle-check text-lg"></i></div>
             </div>
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Maintenance</p>
                     <h3 id="stat-maint" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
                 </div>
-                <div class="bg-amber-50 text-amber-600 p-3 rounded-lg"><i class="fa-solid fa-screwdriver-wrench text-lg"></i></div>
+                <div class="bg-amber-50 text-amber-600 p-3 rounded-xl"><i class="fa-solid fa-screwdriver-wrench text-lg"></i></div>
             </div>
         </div>
 
@@ -124,7 +141,6 @@
                         </tr>
                     </thead>
                     <tbody id="unit-table-body" class="divide-y divide-slate-100 text-sm">
-                        <!-- Data akan dimuat secara dinamis oleh JavaScript -->
                         <tr>
                             <td colspan="5" class="px-6 py-8 text-center text-slate-400">
                                 <i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat data dari Google Spreadsheet...
@@ -136,14 +152,34 @@
         </div>
     </main>
 
-    <!-- Script Logika Aplikasi -->
+    <!-- Script Logika Sistem -->
     <script>
-        // === MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI ===
+        // URL Google Apps Script yang sudah disematkan
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyb3k0NuskdwprEL7M4lNAwYLSU3jpqnhvbCxcAe_WsaSsMOcW_N6wtAAvo64nEUS2Prg/exec";
 
         let unitData = [];
 
-        // 1. Ambil Data dari Google Spreadsheet saat halaman dibuka
+        // Fungsi kustom pengganti alert()
+        function showNotification(title, message, isError = false) {
+            document.getElementById('notifTitle').innerText = title;
+            document.getElementById('notifMessage').innerText = message;
+            const iconWrap = document.getElementById('notifIconWrapper');
+            const icon = document.getElementById('notifIcon');
+            
+            if (isError) {
+                iconWrap.className = "w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl mx-auto mb-3";
+                icon.className = "fa-solid fa-triangle-exclamation";
+            } else {
+                iconWrap.className = "w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mx-auto mb-3";
+                icon.className = "fa-solid fa-circle-check";
+            }
+            document.getElementById('notificationModal').classList.remove('hidden');
+        }
+
+        function closeNotification() {
+            document.getElementById('notificationModal').classList.add('hidden');
+        }
+
         window.onload = function() {
             fetchDataFromCloud();
         };
@@ -151,12 +187,6 @@
         function fetchDataFromCloud() {
             const tbody = document.getElementById('unit-table-body');
             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Sedang menyinkronkan data...</td></tr>`;
-
-            // Jika URL belum diubah oleh Anda, berikan peringatan panduan
-            if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbyb3k0NuskdwprEL7M4lNAwYLSU3jpqnhvbCxcAe_WsaSsMOcW_N6wtAAvo64nEUS2Prg/exec") {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-amber-600 font-medium">⚠️ Mohon masukkan URL Web App Google Apps Script Anda pada variabel <code>APPS_SCRIPT_URL</code> di dalam kode HTML.</td></tr>`;
-                return;
-            }
 
             fetch(APPS_SCRIPT_URL)
                 .then(response => response.json())
@@ -167,17 +197,16 @@
                 })
                 .catch(error => {
                     console.error('Gagal mengambil data:', error);
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-rose-500">Gagal terhubung ke Google Spreadsheet. Periksa kembali URL Web App Anda.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-rose-500">Gagal terhubung ke Google Spreadsheet. Periksa koneksi internet atau izin deployment Apps Script Anda.</td></tr>`;
                 });
         }
 
-        // 2. Render Data ke Tabel HTML
         function renderTable(data) {
             const tbody = document.getElementById('unit-table-body');
             tbody.innerHTML = "";
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Belum ada data populasi unit.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Belum ada data populasi unit di spreadsheet.</td></tr>`;
                 return;
             }
 
@@ -202,14 +231,12 @@
             });
         }
 
-        // 3. Update Statistik Ringkasan
         function updateStats() {
             document.getElementById('stat-total').innerText = unitData.length;
             document.getElementById('stat-ready').innerText = unitData.filter(i => i.status === "Ready").length;
             document.getElementById('stat-maint').innerText = unitData.filter(i => i.status === "Maintenance").length;
         }
 
-        // 4. Tambah Data Manual ke Spreadsheet
         function handleFormSubmit(event) {
             event.preventDefault();
             
@@ -235,16 +262,16 @@
                 document.getElementById('unit-form').reset();
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-plus"></i> Tambah Unit ke Spreadsheet`;
-                fetchDataFromCloud(); // Refresh data dari spreadsheet
+                fetchDataFromCloud();
+                showNotification("Berhasil", "Data unit berhasil ditambahkan ke Spreadsheet!");
             })
             .catch(error => {
-                alert("Gagal menyimpan data ke cloud.");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-plus"></i> Tambah Unit ke Spreadsheet`;
+                showNotification("Gagal", "Gagal menyimpan data ke cloud.", true);
             });
         }
 
-        // 5. Fitur Upload Excel / Bulk Import langsung ke Spreadsheet
         function handleExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -257,7 +284,6 @@
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonRows = XLSX.utils.sheet_to_json(worksheet);
 
-                // Ubah format kolom Excel agar sesuai dengan database
                 const formattedItems = jsonRows.map(row => ({
                     kode: row['Kode Unit'] || row['kode'] || row['KODE'] || '',
                     nama: row['Nama Unit'] || row['nama'] || row['NAMA'] || '',
@@ -267,13 +293,10 @@
                 }));
 
                 if (formattedItems.length === 0) {
-                    alert("File Excel kosong atau format kolom tidak sesuai.");
+                    showNotification("Perhatian", "File Excel kosong atau format kolom tidak sesuai.", true);
                     return;
                 }
 
-                if(!confirm(`Unggah ${formattedItems.length} data unit langsung ke Google Spreadsheet?`)) return;
-
-                // Kirim secara massal (bulk) ke Apps Script
                 fetch(APPS_SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -283,20 +306,19 @@
                 })
                 .then(res => res.json())
                 .then(response => {
-                    alert("Berhasil mengunggah data ke Spreadsheet!");
+                    showNotification("Berhasil", `Berhasil mengunggah ${formattedItems.length} data unit ke Spreadsheet!`);
                     fetchDataFromCloud();
                 })
                 .catch(err => {
-                    alert("Gagal melakukan upload data massal.");
+                    showNotification("Gagal", "Gagal melakukan upload data massal.", true);
                 });
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // 6. Download Seluruh Data ke Excel
         function downloadExcel() {
             if (unitData.length === 0) {
-                alert("Tidak ada data untuk diunduh.");
+                showNotification("Perhatian", "Tidak ada data untuk diunduh.", true);
                 return;
             }
             const worksheet = XLSX.utils.json_to_sheet(unitData);
@@ -305,7 +327,6 @@
             XLSX.writeFile(workbook, "Data_Populasi_Unit.xlsx");
         }
 
-        // 7. Pencarian / Filter Tabel Interaktif
         function filterTable() {
             const keyword = document.getElementById('search-box').value.toLowerCase();
             const filtered = unitData.filter(item => 
